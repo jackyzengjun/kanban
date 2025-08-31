@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代维系统费用结算数据看板</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- 使用Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- CSV数据加载器 -->
+    <script src="csv-loader.js"></script>
+    <!-- 引入字体图标 - 使用备用CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css" crossorigin="anonymous">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- 顶部标题栏 -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1><i class="fas fa-calculator"></i> 代维系统费用结算数据看板</h1>
+            </div>
+            <div class="header-right">
+                <div class="datetime" id="datetime"></div>
+                <div class="refresh-btn" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> 刷新数据
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main class="dashboard-main">
+            <!-- 关键指标卡片 -->
+            <section class="metrics-section">
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-label">总结算费用</div>
+                        <div class="metric-value-dual">
+                            <div class="total-cost-main">
+                                <div class="metric-value" id="totalSettlement">¥258.0万</div>
+                                <div class="metric-change positive" id="totalCostChange">
+                                    <i class="fas fa-arrow-up"></i> +5.2%
+                                </div>
+                            </div>
+                            <div class="company-cost-details" id="companyCostDetails">
+                                <div class="company-cost-item">铁通: 176万</div>
+                                <div class="company-cost-item">嘉环: 99万</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-hand-point-up"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-label">按次费用</div>
+                        <div class="metric-value" id="pertimeCost">4.2万</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i> +8.3%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-label">包年费用</div>
+                        <div class="metric-value" id="annualCost">1.2万</div>
+                        <div class="metric-change negative">
+                            <i class="fas fa-arrow-down"></i> -2.1%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-label">综合评分</div>
+                        <div class="metric-value-dual">
+                            <div class="company-score-group">
+                                <div class="company-score">
+                                    <span class="company-name">铁通：</span>
+                                    <span class="score-value">7.2分</span>
+                                </div>
+                                <div class="company-change positive">
+                                    <i class="fas fa-arrow-up"></i> +0.8%
+                                </div>
+                            </div>
+                            <div class="company-score-group jiahuan">
+                                <div class="company-score">
+                                    <span class="company-name">嘉环：</span>
+                                    <span class="score-value">82分</span>
+                                </div>
+                                <div class="company-change positive">
+                                    <i class="fas fa-arrow-up"></i> +1.2%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 标签导航 -->
+            <section class="control-section">
+                <div class="tab-navigation">
+                    <div class="tab-item active" data-tab="total" onclick="switchTab('total')">
+                        <i class="fas fa-chart-line"></i>
+                        <span>总费用分析</span>
+                    </div>
+                    <div class="tab-item" data-tab="pertime" onclick="switchTab('pertime')">
+                        <i class="fas fa-hand-point-up"></i>
+                        <span>按次分析</span>
+                    </div>
+                    <div class="tab-item" data-tab="annual" onclick="switchTab('annual')">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>包年分析</span>
+                    </div>
+                </div>
+                
+                <div class="selector-container">
+                    <div class="month-selector">
+                        <label>选择年月：</label>
+                        <select id="month-selector">
+                            <option value="2024-01">2024年1月</option>
+                            <option value="2024-02">2024年2月</option>
+                            <option value="2024-03">2024年3月</option>
+                            <option value="2024-04">2024年4月</option>
+                            <option value="2024-05">2024年5月</option>
+                            <option value="2024-06">2024年6月</option>
+                            <option value="2024-07">2024年7月</option>
+                            <option value="2024-08">2024年8月</option>
+                            <option value="2024-09">2024年9月</option>
+                            <option value="2024-10">2024年10月</option>
+                            <option value="2024-11">2024年11月</option>
+                            <option value="2024-12" selected>2024年12月</option>
+                            <option value="2025-01">2025年1月</option>
+                            <option value="2025-02">2025年2月</option>
+                            <option value="2025-03">2025年3月</option>
+                            <option value="2025-04">2025年4月</option>
+                            <option value="2025-05">2025年5月</option>
+                            <option value="2025-06">2025年6月</option>
+                            <option value="2025-07">2025年7月</option>
+                            <option value="2025-08">2025年8月</option>
+                            <option value="2025-09">2025年9月</option>
+                            <option value="2025-10">2025年10月</option>
+                            <option value="2025-11">2025年11月</option>
+                            <option value="2025-12">2025年12月</option>
+                        </select>
+                    </div>
+                    
+                    <div class="profession-selector">
+                        <label>选择专业：</label>
+                        <select id="profession-selector">
+                            <option value="all" selected>全部</option>
+                            <option value="jiake">家客</option>
+                            <option value="jike">集客</option>
+                            <option value="xianlu">线路</option>
+                            <option value="wuxian">无线</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 总费用分析内容 -->
+            <section id="total-content" class="tab-content active">
+                <div class="chart-container large">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-area"></i> <span id="trendChartTitle">月度结算费用趋势</span></h3>
+                        <div class="period-selector">
+                            <label>选择周期：</label>
+                            <select id="periodStart">
+                                <option value="2024-01" selected>2024年1月</option>
+                                <option value="2024-02">2024年2月</option>
+                                <option value="2024-03">2024年3月</option>
+                                <option value="2024-04">2024年4月</option>
+                                <option value="2024-05">2024年5月</option>
+                                <option value="2024-06">2024年6月</option>
+                                <option value="2024-07">2024年7月</option>
+                                <option value="2024-08">2024年8月</option>
+                                <option value="2024-09">2024年9月</option>
+                                <option value="2024-10">2024年10月</option>
+                                <option value="2024-11">2024年11月</option>
+                                <option value="2024-12">2024年12月</option>
+                                <option value="2025-01">2025年1月</option>
+                                <option value="2025-02">2025年2月</option>
+                                <option value="2025-03">2025年3月</option>
+                                <option value="2025-04">2025年4月</option>
+                                <option value="2025-05">2025年5月</option>
+                                <option value="2025-06">2025年6月</option>
+                                <option value="2025-07">2025年7月</option>
+                                <option value="2025-08">2025年8月</option>
+                                <option value="2025-09">2025年9月</option>
+                                <option value="2025-10">2025年10月</option>
+                                <option value="2025-11">2025年11月</option>
+                                <option value="2025-12">2025年12月</option>
+                            </select>
+                            <span>至</span>
+                            <select id="periodEnd">
+                                <option value="2024-01">2024年1月</option>
+                                <option value="2024-02">2024年2月</option>
+                                <option value="2024-03">2024年3月</option>
+                                <option value="2024-04">2024年4月</option>
+                                <option value="2024-05">2024年5月</option>
+                                <option value="2024-06">2024年6月</option>
+                                <option value="2024-07">2024年7月</option>
+                                <option value="2024-08">2024年8月</option>
+                                <option value="2024-09">2024年9月</option>
+                                <option value="2024-10">2024年10月</option>
+                                <option value="2024-11">2024年11月</option>
+                                <option value="2024-12">2024年12月</option>
+                                <option value="2025-01">2025年1月</option>
+                                <option value="2025-02">2025年2月</option>
+                                <option value="2025-03">2025年3月</option>
+                                <option value="2025-04">2025年4月</option>
+                                <option value="2025-05">2025年5月</option>
+                                <option value="2025-06">2025年6月</option>
+                                <option value="2025-07">2025年7月</option>
+                                <option value="2025-08">2025年8月</option>
+                                <option value="2025-09">2025年9月</option>
+                                <option value="2025-10">2025年10月</option>
+                                <option value="2025-11">2025年11月</option>
+                                <option value="2025-12" selected>2025年12月</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="totalTrendChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 按次分析内容 -->
+            <section id="pertime-content" class="tab-content">
+                <div class="charts-row">
+                    <div class="chart-container medium">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-chart-pie"></i> 代维公司费用分布</h3>
+                        </div>
+                        <div class="chart-content">
+                            <canvas id="pertimeCompanyChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container medium">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-chart-pie"></i> 服务专业费用分布</h3>
+                        </div>
+                        <div class="chart-content">
+                            <canvas id="pertimeServiceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 包年分析内容 -->
+            <section id="annual-content" class="tab-content">
+                <div class="charts-row">
+                    <div class="chart-container medium">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-chart-pie"></i> 代维公司费用分布</h3>
+                        </div>
+                        <div class="chart-content">
+                            <canvas id="annualCompanyChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container medium">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-chart-pie"></i> 服务专业费用分布</h3>
+                        </div>
+                        <div class="chart-content">
+                            <canvas id="annualServiceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 底部状态栏 -->
+        <footer class="dashboard-footer">
+            <div class="footer-center">
+                <span>技术支持: 省无线中心 | 版本: v1.0.1</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
