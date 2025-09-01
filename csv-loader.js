@@ -7,15 +7,36 @@ class CSVLoader {
     // 加载CSV文件
     async loadCSV(filePath) {
         try {
-            const response = await fetch(filePath);
+            // 添加缓存破坏参数，确保获取最新数据
+            const cacheBuster = new Date().getTime();
+            const url = `${filePath}?v=${cacheBuster}`;
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            });
+            
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
+            
             const csvText = await response.text();
+            if (!csvText || csvText.trim() === '') {
+                throw new Error('CSV文件为空');
+            }
+            
             this.data = this.parseCSV(csvText);
+            console.log('CSV数据加载成功，解析到', Object.keys(this.data).length, '个月份的数据');
             return this.data;
         } catch (error) {
             console.error('加载CSV文件失败:', error);
+            // 提供更详细的错误信息
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                throw new Error('网络连接失败，请检查网络连接或文件路径');
+            }
             throw error;
         }
     }

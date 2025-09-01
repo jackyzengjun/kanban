@@ -13,30 +13,49 @@ let csvData = null; // 存储从CSV加载的数据
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', async function() {
+    // 显示加载状态
+    showLoadingStatus('正在加载数据...');
+    
     try {
         // 尝试加载CSV数据
         await loadCSVData();
+        showLoadingStatus('数据加载成功', 'success');
     } catch (error) {
         console.warn('CSV数据加载失败，使用默认数据:', error);
+        showLoadingStatus('数据加载失败，使用默认数据', 'warning');
+        // 使用默认数据
+        csvData = generateDefaultData();
+        isDataLoaded = false;
     }
     
     initializeDashboard();
     
     // 添加时间选择器事件监听
-    document.getElementById('periodStart').addEventListener('change', updateChartData);
-    document.getElementById('periodEnd').addEventListener('change', updateChartData);
+    const periodStart = document.getElementById('periodStart');
+    const periodEnd = document.getElementById('periodEnd');
+    if (periodStart) periodStart.addEventListener('change', updateChartData);
+    if (periodEnd) periodEnd.addEventListener('change', updateChartData);
     
     // 添加月份选择器事件监听
-    document.getElementById('month-selector').addEventListener('change', function() {
-        updateMonthlyData();
-        updateChartData(); // 同时更新趋势图表
-    });
+    const monthSelector = document.getElementById('month-selector');
+    if (monthSelector) {
+        monthSelector.addEventListener('change', function() {
+            updateMonthlyData();
+            updateChartData(); // 同时更新趋势图表
+        });
+    }
     
     // 添加专业选择器事件监听
-    document.getElementById('profession-selector').addEventListener('change', function() {
-        updateMonthlyData();
-        updateChartData(); // 同时更新趋势图表
-    });
+    const professionSelector = document.getElementById('profession-selector');
+    if (professionSelector) {
+        professionSelector.addEventListener('change', function() {
+            updateMonthlyData();
+            updateChartData(); // 同时更新趋势图表
+        });
+    }
+    
+    // 隐藏加载状态
+    setTimeout(() => hideLoadingStatus(), 2000);
 });
 
 // 加载CSV数据
@@ -686,6 +705,104 @@ function initPertimeServiceChart() {
             }
         }]
     });
+}
+
+// 显示加载状态
+function showLoadingStatus(message, type = 'info') {
+    let statusDiv = document.getElementById('loading-status');
+    if (!statusDiv) {
+        statusDiv = document.createElement('div');
+        statusDiv.id = 'loading-status';
+        statusDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        `;
+        document.body.appendChild(statusDiv);
+    }
+    
+    const colors = {
+        info: '#3498db',
+        success: '#27ae60',
+        warning: '#f39c12',
+        error: '#e74c3c'
+    };
+    
+    statusDiv.style.backgroundColor = colors[type] || colors.info;
+    statusDiv.textContent = message;
+    statusDiv.style.display = 'block';
+}
+
+// 隐藏加载状态
+function hideLoadingStatus() {
+    const statusDiv = document.getElementById('loading-status');
+    if (statusDiv) {
+        statusDiv.style.display = 'none';
+    }
+}
+
+// 生成默认数据（当CSV加载失败时使用）
+function generateDefaultData() {
+    const defaultData = {};
+    const currentDate = new Date();
+    
+    // 生成最近6个月的默认数据
+    for (let i = 5; i >= 0; i--) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        
+        defaultData[monthKey] = {
+            totalCost: Math.random() * 500 + 200, // 200-700万
+            totalChange: (Math.random() - 0.5) * 20, // -10% 到 +10%
+            totalCount: Math.floor(Math.random() * 100) + 50, // 50-150个项目
+            countChange: (Math.random() - 0.5) * 30, // -15% 到 +15%
+            avgCost: Math.random() * 10 + 5, // 5-15万
+            avgChange: (Math.random() - 0.5) * 15, // -7.5% 到 +7.5%
+            pertimeCost: Math.random() * 200 + 100, // 100-300万
+            annualCost: Math.random() * 300 + 100, // 100-400万
+            score: {
+                '铁通': Math.random() * 20 + 80, // 80-100分
+                '长实': Math.random() * 20 + 80,
+                '嘉环': Math.random() * 20 + 80
+            },
+            scoreChange: {
+                '铁通': (Math.random() - 0.5) * 10,
+                '长实': (Math.random() - 0.5) * 10,
+                '嘉环': (Math.random() - 0.5) * 10
+            },
+            pertimeData: {
+                companies: {
+                    labels: ['铁通', '长实', '嘉环'],
+                    data: [Math.random() * 100 + 50, Math.random() * 80 + 40, Math.random() * 60 + 30]
+                },
+                services: {
+                    labels: ['家客', '集客', '线路', '无线'],
+                    data: [Math.random() * 80 + 40, Math.random() * 60 + 30, Math.random() * 70 + 35, Math.random() * 50 + 25]
+                }
+            },
+            annualData: {
+                companies: {
+                    labels: ['铁通', '长实', '嘉环'],
+                    data: [Math.random() * 120 + 60, Math.random() * 100 + 50, Math.random() * 80 + 40]
+                },
+                services: {
+                    labels: ['家客', '集客', '线路', '无线'],
+                    data: [Math.random() * 100 + 50, Math.random() * 80 + 40, Math.random() * 90 + 45, Math.random() * 70 + 35]
+                }
+            },
+            details: [],
+            companyNames: ['铁通', '长实', '嘉环']
+        };
+    }
+    
+    console.log('使用默认数据，生成了', Object.keys(defaultData).length, '个月份的数据');
+    return defaultData;
 }
 
 // 初始化包年分析图表
